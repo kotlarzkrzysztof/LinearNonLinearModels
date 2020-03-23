@@ -1,0 +1,82 @@
+regLin = function(y, ...) {
+  
+  stars <- function(p.val.vector) {
+    s_vec <- c()
+    for (i in 1:length(p_wartosc)) {
+      if (p_wartosc[i] < 0.001)
+        s_vec[i] <- '***'
+      else if (p_wartosc[i] < 0.01)
+        s_vec[i] <- '**'
+      else if (p_wartosc[i] < 0.1)
+        s_vec[i] <- '*'
+      else if(p_wartosc[i] < 0.05)
+        s_vec[i] <- '.'
+      else
+        s_vec[i] <- ''
+    }
+    return(s_vec)
+  }
+  
+  parameters <- function(matx, n, k) {
+    alpha = solve(t(matx) %*% matx) %*% t(matx) %*% y
+    y2 = matx %*% alpha
+    residua = y - y2
+    rstud = residua / sd(residua)
+    df = (n - k - 1)
+    S2e = sum(residua ^ 2) / df
+    D = S2e * solve(t(matx) %*% matx)
+    Salpha = sqrt(diag(D))
+    testT = alpha / Salpha
+    p_wartosc = 2 * pt(abs(testT), df, lower.tail = FALSE)
+    R2 = 1 - sum(residua ^ 2) / sum((y - mean(y)) ^ 2)
+    F = (R2 / (1 - R2)) * df / (k)
+    p_wartoscF = pf(F, k, df, lower.tail = FALSE)
+    stars = stars(p_wartosc)
+    return(
+      list(
+        Estimate = alpha,
+        Std.Error = Salpha,
+        t.value = testT,
+        Pr = p_wartosc,
+        signf. = stars,
+        R2 = R2,
+        F_pval = p_wartoscF,
+        res=residua,
+        t_res = rstud,
+        S2e=S2e,
+        df=df,
+        F_stat=F
+        
+      )
+    )
+  }
+  
+  createTable <- function(output, names, k) {
+    table <- data.frame(out[1:5])
+    row.names(table) <- c('(Intercept)', names)
+    cat('\nResiduals:\n', summary(out$res))
+    cat('\n\nCoefficients:\n')
+    print(format(table, digits = 4, justify = 'left'))
+    cat('---\n')
+    cat(sprintf("Residual standard error: %.4f on %d degrees of freedom\n", sqrt(out$S2e), out$df))
+    cat(sprintf('Multiple R-squared: %.4f\n', out$R2))
+    cat(sprintf('F-statistic: %.4f on %d and %d degrees of freedom, p-value: %.4e\n',out$F_stat, k, out$df, out$F_pval))
+    cat('---\n')
+    print(as.data.frame(out[9]))
+  }
+  
+  n <- length(y)
+  matx <- matrix(1, n)
+  matx <- cbind(matx, ...)
+  k <- dim(matx)[2] - 1
+  out <- parameters(matx, n , k)
+  names <- as.array(as.list(match.call()[-c(1, 2)]))
+  createTable(out, names, k)
+  
+  invisible(list(out))
+}
+
+regLin(iris$Sepal.Length, iris$Petal.Length, iris$Petal.Width, iris$Sepal.Width)
+
+model <- lm(iris$Sepal.Length~iris$Petal.Length + iris$Petal.Width+ iris$Sepal.Width)
+summary(model)
