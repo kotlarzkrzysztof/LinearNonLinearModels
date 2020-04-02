@@ -1,51 +1,60 @@
+# regLin ------------------------------------------------------------------
+# Dodano możliwość wprowadzenia dowolnej ilości zmiennych niezależnych
+# Dodano output w postaci tabeli
+# Dodano podstawowe statystyki dla reszt
+# Dodano wskaźnik istotności w postaci '*'
+# Dodano reszty studentyzowane
+
+
 regLin = function(y, ...) {
-  
-  stars <- function(p.val.vector) {
+  stars <- function(p_wartosc) {
     s_vec <- c()
     for (i in 1:length(p_wartosc)) {
       if (p_wartosc[i] < 0.001)
         s_vec[i] <- '***'
       else if (p_wartosc[i] < 0.01)
         s_vec[i] <- '**'
-      else if (p_wartosc[i] < 0.1)
+      else if (p_wartosc[i] < 0.05)
         s_vec[i] <- '*'
-      else if(p_wartosc[i] < 0.05)
+      else if (p_wartosc[i] < 0.1)
         s_vec[i] <- '.'
       else
-        s_vec[i] <- ''
+        s_vec[i] <- ' '
     }
+    
     return(s_vec)
   }
   
   parameters <- function(matx, n, k) {
-    alpha = solve(t(matx) %*% matx) %*% t(matx) %*% y
-    y2 = matx %*% alpha
-    residua = y - y2
-    rstud = residua / sd(residua)
-    df = (n - k - 1)
-    S2e = sum(residua ^ 2) / df
-    D = S2e * solve(t(matx) %*% matx)
-    Salpha = sqrt(diag(D))
-    testT = alpha / Salpha
-    p_wartosc = 2 * pt(abs(testT), df, lower.tail = FALSE)
-    R2 = 1 - sum(residua ^ 2) / sum((y - mean(y)) ^ 2)
-    F = (R2 / (1 - R2)) * df / (k)
-    p_wartoscF = pf(F, k, df, lower.tail = FALSE)
-    stars = stars(p_wartosc)
+    alpha <- solve(t(matx) %*% matx) %*% t(matx) %*% y
+    y2 <- matx %*% alpha
+    residua <- y - y2
+    rstud <- residua / sd(residua)
+    df <- (n - k - 1)
+    S2e <- sum(residua ^ 2) / df
+    D <- S2e * solve(t(matx) %*% matx)
+    Salpha <- sqrt(diag(D))
+    testT <- alpha / Salpha
+    p_wartosc <- 2 * pt(abs(testT), df, lower.tail = FALSE)
+    R2 <- 1 - sum(residua ^ 2) / sum((y - mean(y)) ^ 2)
+    F <- (R2 / (1 - R2)) * df / (k)
+    p_wartoscF <- pf(F, k, df, lower.tail = FALSE)
+    stars <- stars(p_wartosc)
+    
     return(
       list(
         Estimate = alpha,
         Std.Error = Salpha,
         t.value = testT,
         Pr = p_wartosc,
-        signf. = stars,
+        Signf. = stars,
         R2 = R2,
         F_pval = p_wartoscF,
-        res=residua,
+        res = residua,
         t_res = rstud,
-        S2e=S2e,
-        df=df,
-        F_stat=F
+        S2e = S2e,
+        df = df,
+        F_stat = F
         
       )
     )
@@ -58,9 +67,22 @@ regLin = function(y, ...) {
     cat('\n\nCoefficients:\n')
     print(format(table, digits = 4, justify = 'left'))
     cat('---\n')
-    cat(sprintf("Residual standard error: %.4f on %d degrees of freedom\n", sqrt(out$S2e), out$df))
+    cat('Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1 \n\n')
+    cat(sprintf(
+      "Residual standard error: %.4f on %d degrees of freedom\n",
+      sqrt(out$S2e),
+      out$df
+    ))
     cat(sprintf('Multiple R-squared: %.4f\n', out$R2))
-    cat(sprintf('F-statistic: %.4f on %d and %d degrees of freedom, p-value: %.4e\n',out$F_stat, k, out$df, out$F_pval))
+    cat(
+      sprintf(
+        'F-statistic: %.4f on %d and %d degrees of freedom, p-value: %.4e\n',
+        out$F_stat,
+        k,
+        out$df,
+        out$F_pval
+      )
+    )
     cat('---\n')
     print(as.data.frame(out[9]))
   }
@@ -76,7 +98,8 @@ regLin = function(y, ...) {
   invisible(list(out))
 }
 
-regLin(iris$Sepal.Length, iris$Petal.Length, iris$Petal.Width, iris$Sepal.Width)
+regLin(iris$Sepal.Length, iris$Sepal.Width, iris$Petal.Length, iris$Petal.Width)
 
-model <- lm(iris$Sepal.Length~iris$Petal.Length + iris$Petal.Width+ iris$Sepal.Width)
+model <-
+  lm(iris$Sepal.Length~ iris$Sepal.Width+ iris$Petal.Length + iris$Petal.Width)
 summary(model)
