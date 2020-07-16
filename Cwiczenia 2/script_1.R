@@ -12,34 +12,18 @@ korel <- function(x,
     new.frame <- data.frame(X = Rx, Y = Ry)
     sorted <- new.frame[order(new.frame$X),]
     len.Y = length(sorted$Y)
-    id = 2
-    C = c()
-    D = c()
-    for (i in sorted$X) {
-      count_C = 0
-      count_D = 0
-      for (z in sorted$Y[id:len.Y]) {
-        if (z > i) {
-          count_C = count_C + 1
-        }
-        else {
-          count_D = count_D + 1
-        }
-      }
-      C <- c(C, count_C)
-      D <- c(D, count_D)
-      id  = id + 1
-      if (id == len.Y + 1)
-        break
+    conc <- 0
+    dis <- 0
+    for (i in 1:length(sorted$Y)){
+      conc <- conc + sum(sorted$Y[i] < sorted$Y[(i+1):length(sorted$Y)], na.rm = T)
+      dis <- dis + sum(sorted$Y[i] > sorted$Y[(i+1):length(sorted$Y)], na.rm = T)
     }
-    sum_c <- sum(C)
-    sum_d <- sum(D)
-    n <- len.Y
-    ns = (n * (n - 1)) / 2
-    ken <- (sum_c - sum_d) / ns
     
-    Tk <- (3 * ken * sqrt(n * n - 1)) / (sqrt(2 * (2 * n + 5)))
-    p = 2 * pnorm(abs(Tk), lower.tail = FALSE)
+    ken <- (conc - dis) / (conc + dis)
+    
+    z <- (3*ken*sqrt(len.Y*(len.Y - 1)))/(sqrt(2*(2*len.Y+5)))
+    
+    p = 2 * pnorm(abs(z), lower.tail = FALSE)
     return(list(Rk = ken, p = p))
   }
   

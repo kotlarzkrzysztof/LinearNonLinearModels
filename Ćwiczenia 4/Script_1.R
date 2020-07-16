@@ -1,14 +1,4 @@
-data(iris)
-
-#ANOVA jednoczynnikowa
-iris$season = rbinom(150,1,prob=0.5)
-
-
-m1 = lm(Sepal.Length~Species, data = iris)
-summary(aov(m1))
-
-
-anova <- function(Y, X1, X2){
+anovaHSD <- function(Y, X1, X2){
   stars <- function(p_wartosc) {
     s_vec <- c()
     for (i in 1:length(p_wartosc)) {
@@ -99,15 +89,15 @@ anova <- function(Y, X1, X2){
     df <- c(out$df)
     sum_sq <- c(out$Sum_Sq)
     Mean <- c(out$Mean_Sq)
-    F_val <- c(signif(out$F_value, digits = 3),'')
-    P <- c(signif(out$p_val, digits = 3), '')
+    F_val <- c(signif(out$F_value, digits = 4),'')
+    P <- c(signif(out$p_val, digits = 4), '')
     stars <- c(stars(out$p_val), '')
     table <- format(data.frame(df, sum_sq, Mean, F_val, P, stars),  digits = 3)
     rownames(table) <- c(name, 'Residuals')
     colnames(table) <- c('Df', 'Sum Sq', 'Mean Sq', 'F Value', 'Pr(>F)', 'Signif.')
     print(table)
     cat('---\n')
-    cat('Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1\n')
+    cat("Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n")
     cat('\nTukeyHSD Diff\n\n')
     print(out$Tukey_diff)
     cat('\nTukeyHSD p_value\n\n')
@@ -126,11 +116,3 @@ anova <- function(Y, X1, X2){
   name <- as.array(as.list(match.call()[-c(1,2)]))
   create_table(out, name)
 }
-
-anova(iris$Sepal.Length, factor(iris$Species), factor(iris$season))
-m2 = lm(iris$Petal.Width~Species, data = iris)
-
-
-summary(aov(m2))
-TukeyHSD(aov(m2))
-
